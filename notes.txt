@@ -1,89 +1,91 @@
+learn
+    spinningup - when doing baseline and ablative analysis
 
-The purpose is simple: understand fluid dynamics well enough to be as good if not better
-at manipulation of fluids as inventors. The manipulation is done through shaping the
-morphology.
+baselines
+    comparison with other rl methods
+    different seeds to see brittleness
+    comparison of functionally interesting behavior prediction with rand vs. policy
+    compare generalization capabilities - to tackle: does this induce negative bias to
+    learning?
+    model based active exploration
+    random distillation networks
+    self-supervised intrinsic exploration
 
-Understanding:
-    Constraints:
-        -extensible to cases where there is another gradient (like heat, or chemical) as
-    well as different reynolds number (within a range?)
-        -reasonably good dynamics - how to test (and be accurate in real world)
-    qualitatively, but not be bottlenecked computationally (and learn only that necessary
-            for reconstruction of simulation)
-            -perhaps some other reconstruction where low-grain features are likely to be
-            compressed
-                ---"concept bottlenecked models"
-                ---"coarse-grid cfd error prediction using ml"
-                ---"multiscale cfd"
-                ---"learning dynamical systems from partial observations"
-                ---"learning data-driven discretization for pdes"
-         -be able to understand deep regularities (one-way pipe) and homogeneity in these
-         systems
-        Computationally simple:
-            -Non-explicit (or at least fine-grained) fluid simulation
-                If it's non-explicit (and relatively constrained), then it will be able to take a model in real life
-                (say a picture, video, or a 3d mesh) and infer the functions and it's
-                behavior.
+    reproducibility - https://www.cs.mcgill.ca/~jpineau/ReproducibilityChecklist.pdf
 
-        Fast learning:
-            -sampling "edge cases"
-            -objective function
+speed
+    .to is bad, device=device is super good
+    os.environ["OMP_NUM_THREADS"] = "1"
+    High-dimensional state space, random feature space prediction
+    How slow and unparallelizable is the entire stack - gpu, cpu, wall, environment's "T"
 
-Manipulation of morphology:
+practical considerations
+    big models - tradeoff between more expressive/faster learning, overfitting, more time
+    to predict, less data (wall clock wise)
+    batch size and learning rate - https://arxiv.org/pdf/1812.06162.pdf
+    hyperparams: https://deepmind.com/blog/article/population-based-training-neural-networks
+    Parallelization of transformer in this case
+    Multiple seeds, randomness
+    parallel environments running
+    
+    tricks? - reset the network if it hasn't improved?
+        maybe not because prediction of random is chaotic but not stochastic
 
-    --- Interactive geometric domain iteration of massively parallel CFD simulation
-    ---topology optimization using finite element solvers
-    Cage handle meshed 
+    exploration vs exploitation - add randomness to actions (learned mu and fixed std), no randomness, policy stochasticity (learned mu and std)
+        I do want it to exploit though, as whatever context + state -> action leads to
+        highest reward is the best learning. Assuming that the context + state analysis is
+        optimal
 
-    Constraints:
-        No floating components
-        Regularization so there is no exploitation of slight variation or any simulation
-        drawback - perhaps by making physically consistent
+        add high T noise parameter and anneal to train - sketchrnn
+        Furthermore, the estimate will have less variance - faster training
 
-        Computationally simple:
-            -Compositionally use abstract techniques from other designs (like use of
-                    vortices, velocity obstruction, etc) to be able to "piece" it together
-            relatively fast. Must understand these building blocks such that it's
-            configurable, fast, and insightful (intepretable in the nature of fluids)
-            -Simple prediction for behavior from network and backprop to interface with
-            morphology (and then we have diff sim)
+    sticky actions? - propensity towards null actions
+    tensorboard - visualization
+    reward normalization - mean and standard deviation, have negative reward for bad
+    actions instead of zero (less likely to do them, less saturation in gradient steps for
+            learning)
+        has the same effect as using the advantage function
+    see if the reward varies over orders of magnitude - to take log
+    #reward scaling - more stable, may want perfect behavior instead of interesting
+    (depending on how well it does with spikes of reward)
+    loss function scaling
+    gpu spot instances - multi-gpu parallelization
+    masks
 
-Networks:
-    -Physically-https://asmedigitalcollection.asme.org/heattransfer/article-abstract/121/4/1076/430081/A-Residual-Based-Fuzzy-Logic-Algorithm-for-Control?redirectedFrom=fulltextinformed nns
-    -Neural ordinary differential equations
-        -adjoint state methods for gradients
-    -variational autoencoders (and normalizing flows)
-    -dynamic causal modelling
+experimenting
+    See capabilities of predictor by how fast it learns on a_t = null.
 
-How to generalize to noise, chaos, and entropy directly (as differentiating through noise
-        is unfeasable)
-Exponential amount of degrees of freedom - compress representation of fluid motion and
-object manipulation jointly.
-Complex interactions - learn interactions and add non-locality to loss (maximize locality
-        and non-interference)
-        -http://www.cs.umd.edu/~liangjb/diff_fluids/diff_fluids_main.pdf
+    What should be the scale of sim for accuracy and low-dimensionality?
+        -High sim, low output?
 
-Comparison:
-    -Solid and hollow object
-    -Current methods for fluid control - speed, accuracy, usability
-    -PPO and other rl algorithms
-    -computational complexity - test time variability?
-    -weather forecasting
-    -doubly inverted pendulum
+    use "sacred" for experiments
+    see which hyperparameters are important
+    add noisy tv for certain actions - or is it trivial?
 
-Stand-by:
-    -Compositional programming interface
-    -Inverse problems
-        -Few-shot learning in new environments from footage
-        -Function from shape
-        -Aggregate statistics from motion
-    -Bi-stable, n-stable systems
-    -equilibrium computation
-    -condition on past - future prediction given qualitative in general morphologies.
-    -evacuation of people (traffic flow)
-    -applications with it's mostly interpretable knowledge
-        -Information flow
-        -free energy - variational models
-        -Shape hallucination (tease out)
-        -Turing machine equivalent - computational understanding
-    -fluid testing simulation - morphology understanding, condition testing
+
+understand
+    What kind of compression are language models/transformers doing and how can it be
+    measured?
+    Test for partial observability training (POMDP formalism)
+
+challenges
+    Reduce hyperparameters (like value function approx.) - better rl algo (iterated sup?)
+    Do longer running algs run into O(n^2) computational constraint for learning on entire dataset/buffer?
+    active learning
+        We need active learning from beginning as some dynamics are just fully chaotic
+        Especially if it's hierarchical, error dynamics won't be periodic for a fixed
+        dynamics system
+
+        time-varying policies - depends on knowledge
+        
+        understand knowledge
+            latent space compression of previous and latent space delta change
+
+architecture
+    conv nets for next state prediction - delta x that is localized (resnet?)
+        yes, there is an implicit bias about the dynamics with the structure
+    What makes GPT so good, and transformers? (anything in gpt not in transf. that makes it suited for text)
+    are transformers good for anything else than language?
+    visual + transformers - latent space (why no latent?)
+
+

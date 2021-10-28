@@ -1,0 +1,25 @@
+
+
+rl framework for unsupervised attention choosing system rl
+online algorithm
+transformers
+lifelong learning
+
+how did the formalism for rl come about - proofs, theorems, intuition
+develop new/old but rehashed/similar but subtly different formalism of what rl seeks to do
+keep reading papers on computer
+
+read up:
+    read papers during school
+    get to numerical methods and others for simulating fluids - read books
+    dynamical systems book
+
+reward funtion changing - inverse rl <-> higher + lower
+optimal control of data -> lower dynamic process
+
+factored dynamics - D(s)D(a|s)
+
+dont forget:
+    contrained manifold for active learning - unsupervised?
+
+
