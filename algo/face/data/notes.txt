@@ -14,6 +14,8 @@ look at:
     datasets + eye gaze ones (if you scroll down to "face-focused approaches")
     Driver Gaze Region Estimation Without Using Eye Movement - uses partitioned face data
     to predict gaze (instead of eyes), also interesting datasets used
+    What Can Be Predicted from Six Seconds of Driver Glances? - insteresting
+    classification from raw glanze
 
 
 !solve:
@@ -27,6 +29,7 @@ look at:
         how to correct per person (exploration)
         how about pretraining it with z and then learning error part (there is always
                 error right?)
+            -> would it be easier to give it raw image data to net?
 
 techniques:
     baseline of that person (continual learning + personalization)
@@ -155,6 +158,11 @@ GazeCapture -
     -Tracking is gaze on tablet device
     -Hard to download as I need the organization email
 
+Gaze in the wild
+Actions in the eye
+LISA Gaze Dataset
+open Columbia gaze dataset
+AutoPOSE
 
 ?Dataset pupil near-eye gaze - direction angle instead of position
 ?Dataset blinking eye states - drowsiness
