@@ -1,0 +1,163 @@
+look at:
+    references from https://gazecapture.csail.mit.edu/cvpr2016_gazecapture.pdf
+    Eye tracking in human-computer interaction and usability research: Current status and
+    future prospects - explains eye-tracker work and functions in HCI
+    Self-supervised learning through the eyes of a child - psychology self-supervised
+    stuff
+    Attention Mechanisms in Computer Vision: A Survey - survey of different attention
+    mechanisms, can we use one of them?
+    PASSIVE DRIVER GAZE TRACKING WITH ACTIVE APPEARANCE MODELS - some math derivation of
+    gaze tracking
+    Motion transformer - keeping attention to specific trajectory path
+    gaze360 paper - does ablative comparison with popular gaze datasets
+    DMD dataset paper - does ablative comparison with vision-based driver monitoring
+    datasets + eye gaze ones (if you scroll down to "face-focused approaches")
+
+
+!solve:
+    find "best features" to describe each behavior for specific person on the fly
+        ** not learned from simple average, has to be explicit **
+        ** this may be benefitial for when there are abnormalities in the movement (model
+                breaks, and it needs to fix itself)
+        correlation analysis needs to be personalized
+            can only do: observed -> features -> metric
+        informative (maximization) features (exploitation) + 
+        how to correct per person (exploration)
+
+techniques:
+    baseline of that person (continual learning + personalization)
+    fixing model on the fly - closed-loop correction
+    unsupervised clustering of behavior for it's impprediction - one for all
+        -correlate these *learned* features with:
+            !are they subtle enough? 
+            psychometrics - depression, anxiety, attention, etc
+                !usual psychometric biases - representative sample
+            disease prediction from person's model - glaucoma, deficit, deprivation,
+            schizophrenia (dysfunction)
+            recommendations - understanding person's feelings
+            look at human-robot interactions
+            predict content consumed - privacy, redundancy (vs. high importance)
+    **make it simple, then make it fun (how about prediction of many different
+            time scale ? or ... )
+
+Measure angle, position doesn't change
+We are trying to do spatio-temporal gaze prediction
+
+Dataset pretraining
+    eye gaze (MPIIGaze) - only for static
+    ?mean statistics - all eye move. data (might bias)
+
+!Dataset challenges
+    Center bias -- data preprocessing, unbias center gaze
+    Behavioral bias - little shape-like motion, erratic motion is known
+    Calibration - head orientation for instance, https://pubmed.ncbi.nlm.nih.gov/24639620/
+    No movement - mostly statically towards one region (requires knowing region), 
+                static image (region) vs video (movement)
+    Unnatural seeming data when camera/when recording data
+    Little noise/erratic movement
+    ?monocular vs. binocular eye
+    unrelated videos vs driving 
+        non-related data might not be beneficial for prediction of psychometrics
+    artifacts of low-quality - error
+    normalization of different-sized input
+    ?Join close-up, raw, and gaze data
+        -> cross-dataset might exhibit poor performance, preserve "gaze-relvant" features - PureGaze
+    split of multimodal, raw, etc data for validation and training
+    too noisy - take out outliers by doing a mse from this frame to next (3 std)
+
+
+Datasets should be of naturalistic humans in driving settings where we can get video on
+them
+    -gaze from eye-tracking glasses (~2 datasets on this)
+        -requires "thing to look at" for testing
+        -testing must require you to take raw pupil and get gaze
+    -eye position (a few weak datasets, but it can be gotten from opencv)
+        -requires correct opencv data
+
+DR(eye)VE dataset
+    https://drive.google.com/drive/folders/1SdSyWKYwzH20vRnD84cMvsKTcBA47D9i
+    -includes 555,000 frames 74 sequences (5 mins)
+    -varying traffic conditions, scenarios, and weather/lightning conditions
+    ?-gaze estimation with glasses
+
+
+A multimodal dataset for various forms of distracted driving
+    -eye tracking missing ~20% for no distraction, ~40% for distraction
+    -eye tracking not in the structure study data part of it
+    ~ 56 GB of structured data
+    Includes 68 voluteers with a non-trivial amount of noise (some factors couldn't be
+            calculated for some)
+    -gaze estimation with glasses?, do have (x, y)
+
+An eye tracking dataset for point of gaze detection
+    -9 point calibration, 10 subjects looked at points on the screen and 
+    head and eye motion were recorded (sequentially)
+    -they give coordinate system
+
+
+GazeBase
+    -12,334 monocular eye-movement recordings (sequential), 322 college-aged subjects
+    tasks: fixation, horizontal saccade, reading, cinema, game
+    calibration protocol
+
+EYEDIAP
+    Gaze estimation dataset with 640x480 VGA resolution and 30fps + HD camera
+    Sensor calibration with head pose and eye tracking 
+    Iterative Closest Points (ICP) to find head location from 3D space
+    They are seeing floating targets (tracking them)
+    Screen coordinates, angular error, 3D distance error
+
+OpenEDS2020 Open Eyes Dataset
+    -80 participants with varied appareance, 66,560 sequences, 550,400 *eye-images and
+    gaze vectors*, 55-100 frames/sequence
+    -baselines about 5.4 degrees gaze prediction 1-5 frames to future
+        -> does pretty well, but can we learn this z-space continuously (N-steps)
+        -> find pockets of reducibility
+        -> changing multi-scale baseline (attention kinda) - how do you start from zero?
+        (this needs 50 before)
+    -SOTA for competition is 3.17 degrees
+        ?can we do a direct comparison with SOTA (like seeing it's long-term prediction
+                error not just once)
+    -5% of it has sequential segmentation labels
+    -100 Hz controlled lumination vr headset
+    track-1 gaze prediction - predict next 5 given previous 50
+        -we can pretrain the model to do this first, and then we can train the lstm
+        !lstm temporal has sparser data
+
+
+A Multimodal Eye Movement Dataset and a Multimodal Eye Movement Segmentation Analysis
+    eye close-up, vector, pupil center + scene
+    800,000 gaze points, 19 subjects
+    neural network as GT - Neural networks for optical vector and eye ball parameter
+    estimation.
+
+DMD (Driver Monitoring Dataset)
+    -41 hours of RGB, depth, and IR videos
+    -37 drivers, doing 13 distraction activities - semi-natural
+    -Different perspectives on each person, different situations/distractions (indexed)
+
+Gaze360
+    3D Physically uncontrained gaze estimation in the wild - many people, sideways, etc
+    ** See how they use ResNets for multiple eyes
+
+CRCNS eye-1 dataset
+    -video-stimuli 50 videos, 8 people, (x, y) - 240 per second
+    -640x480, 33 ms/frame, 9 point calibration
+    gives status of blinking as flag
+    ?subject id unknown
+
+GazeCapture - 
+    -CNN achieves an 1.71cm and 2.53cm error (uncalibrated), non-sequential
+    -Tracking is gaze on tablet device
+    -Hard to download as I need the organization email
+
+
+?Dataset pupil near-eye gaze - direction angle instead of position
+?Dataset blinking eye states - drowsiness
+?Datasets for video - yawning
+?Datasets from watching videos/movies
+?Eye gaze estimation in phones to "convert" data
+An extensive dataset of eye movements during viewing of complex images
+
+Network:
+    Attentive conv lstm

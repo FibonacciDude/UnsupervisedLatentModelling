@@ -6,7 +6,7 @@ from os import path
 
 # pendulum env in pytorch (much faster)
 class PendulumEnv():
-    def __init__(self, dtype, device, Net, lr=1e-4, N=1, g=10.0, pick=0):
+    def __init__(self, dtype, device, Net, trajectory=40, lr=1e-4, N=1, g=10.0, pick=0):
         self.dtype = dtype
         self.device = torch.device("cuda")
         self.max_speed = 8
@@ -18,6 +18,7 @@ class PendulumEnv():
         self.N = N
         self.viewer = None
         self.cnt = 0
+        self.trajectory = trajectory
 
         high = torch.tensor([1.0, 1.0, self.max_speed], device=self.device, dtype=self.dtype)
 
@@ -71,7 +72,11 @@ class PendulumEnv():
 
     def step(self, u):
         self.cnt += 1
+        # predict first
         u = u.squeeze(2)
+        obs = self._get_obs()
+        s_pred = self.predict(obs.detach(), u.clone().detach())
+
         th, thdot = self.state[:, :1], self.state[:, 1:]
         #th, thdot = self.state  # th := theta
 
@@ -88,12 +93,12 @@ class PendulumEnv():
         newthdot = torch.clip(newthdot, -self.max_speed, self.max_speed)
         newth = th + newthdot * dt
 
-        #self.state = self.wrap([newth, newthdot])
         self.state = torch.cat((newth, newthdot), dim=1)
         r_env = -costs
         obs = self._get_obs()
-        r_prev = self.get_reward(obs, u)
-        return obs, r_prev, r_env
+        r_pred = self.update(s_pred, obs)
+        #r_pred = self.get_reward(obs, u)
+        return obs, r_pred, r_env
 
     def reset(self, flag=True):
         high = np.array([np.pi, 1])
@@ -107,18 +112,14 @@ class PendulumEnv():
         #self.state = torch.tensor(self.state, device=self.device, dtype=self.dtype)
         #self.state = self.wrap(self.state)
         self.last_u = None
-        #if flag:
-        return self._get_obs()
-        #else:
-        #    return torch.cat((torch.cos(self.th), torch.sin(self.th), self.thdot), dim=1)
+        if flag:
+            return self._get_obs()
 
     def _get_obs(self):
-        #if self.cnt % 200 and self.cnt != 0:
-        #    return self.reset(False)
+        if self.trajectory is not None and self.cnt % self.trajectory and self.cnt != 0:
+            self.reset(False)
 
-        #theta, thetadot = self.state
         theta, thetadot = self.state[:, :1], self.state[:, 1:]
-        #return self.wrap([torch.cos(theta), torch.sin(theta), thetadot])
         out = torch.cat((torch.cos(theta), torch.sin(theta), thetadot), dim=1) # * 10 # scale factor
         return out
 

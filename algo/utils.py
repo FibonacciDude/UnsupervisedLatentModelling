@@ -31,7 +31,9 @@ class Config():
             amt_actions=1,
             lr=1e-3,
             beta_decay=.9,
+            normalization_window=20,
             continuous=True,
+            value_function=False,
             device="cuda",
             dtype=torch.float64,
             phi=lambda x:x):
@@ -51,6 +53,9 @@ class Config():
        
        # dataset params
        self.window_size=window_size
+       self.normalization_window=normalization_window
+
+       self.value_function = value_function
 
        self.phi = phi
        self.amt_actions = amt_actions
@@ -93,7 +98,7 @@ class Dataset():
     @property
     def mean_std_rewards(self):
         self.rewards.detach_()
-        std, mean = torch.std_mean(self.rewards.squeeze(2), 0)
+        std, mean = torch.std_mean(self.rewards[-self.config.normalization_window:].squeeze(2), 0)
         return mean, std
 
     @property
@@ -200,7 +205,7 @@ class Runner():
         self.writer = SummaryWriter(config.dir, flush_secs=1, max_queue=2)
         self.writer_data = []
         self.eval = False # training = True
-        print(self.analyzer, self.analyzer.numel())
+        print("params", self.analyzer.numel())
 
     def select_action(self, probs):
         # (N, action_dim*amt)
@@ -233,25 +238,36 @@ class Runner():
         return action # action vector
 
     def reinforce(self, t): # "reinforce" prev t actions, due to scores of prev using hidden state prev, it doesn't work yet
+       #print("\t\t\treinforcing actions!")
        self.analyzer.train() # this is training mode
        R = 0
-       returns = []
        policy_loss = []
+       returns = []
        # (L, N)
        for r in torch.flip(self.dataset.get_rewards()[-t:, :, :], (0,)):
            R = r + self.conf.gamma * R
            returns.insert(0, R)
-       #returns = torch.tensor(returns, device=self.conf.device, dtype=self.conf.dtype) 
+
+       # normalize
        returns = torch.cat(returns)
        mean, std = self.dataset.mean_std_rewards
        mean, std = mean.unsqueeze(0), std.unsqueeze(0)
        returns = (returns - mean)/(std + self.eps) if self.dataset.context_size > 1 else returns
+
+       # calculate reward with discount
        for log_prob, R, sigma in zip(self.dataset.get_log_probs()[-t:], returns, self.dataset.std):
-           policy_loss.append(-log_prob * R + ( self.conf.beta * 1/2*torch.log(2*np.pi*np.e*sigma**2) ) if self.conf.continuous else 0) #.sum((1, 2)) )
+           #pred = self.value(state)
+           H = self.conf.beta * 1/2*torch.log(2*np.pi*np.e*sigma**2) * self.conf.continuous
+           el = -log_prob * R - H
+           policy_loss.append(el) #.sum((1, 2)) )
+           #returns.
+
+       # optimization
        self.optimizer.zero_grad()
        policy_loss = torch.cat(policy_loss).sum()
        policy_loss.backward()
        self.optimizer.step()
+
        self.dataset.activate_reset()
 
        # decay
