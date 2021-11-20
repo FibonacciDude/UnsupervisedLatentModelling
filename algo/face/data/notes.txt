@@ -12,6 +12,8 @@ look at:
     gaze360 paper - does ablative comparison with popular gaze datasets
     DMD dataset paper - does ablative comparison with vision-based driver monitoring
     datasets + eye gaze ones (if you scroll down to "face-focused approaches")
+    Driver Gaze Region Estimation Without Using Eye Movement - uses partitioned face data
+    to predict gaze (instead of eyes), also interesting datasets used
 
 
 !solve:
@@ -23,6 +25,8 @@ look at:
             can only do: observed -> features -> metric
         informative (maximization) features (exploitation) + 
         how to correct per person (exploration)
+        how about pretraining it with z and then learning error part (there is always
+                error right?)
 
 techniques:
     baseline of that person (continual learning + personalization)
