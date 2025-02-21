@@ -24,9 +24,8 @@ The project uses a dataset of x,y coordinates of people’s eye gazes when 4 dif
 performed. The coordinates are compiled through time until the task ends. The dataset is called “GazeBase”
 https://www.nature.com/articles/s41597-021-00959-y.
 
-To download data, I fetch from their website through the
-https://github.com/FibonacciDude/UnsupervisedLatentModelling repository (different from training repo)
-data/get_gazebase.sh and unzip by data/unzip_gazebase.sh.
+To download data, I fetch from their website through the script
+gaze/data/get_gazebase.sh, and unzip by gaze/data/unzip_gazebase.sh.
 
 Data is then converted to pytorch-compatible and extraneous data cleaned through running data_index.py.
 When fed into the model, the sequence data is properly batched.
